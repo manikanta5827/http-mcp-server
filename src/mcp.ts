@@ -10,8 +10,7 @@
 import type { MCPRequest, MCPResponse } from './types.js';
 import {
   createJSONRPCResponse,
-  createJSONRPCError,
-  createErrorResponse,
+  createJSONRPCError
 } from './jsonrpc.js';
 import { tools, allTools } from './registry.js';
 
@@ -70,12 +69,12 @@ export async function handleMCPRequest(
 
         return createJSONRPCResponse(request.id!, formattedResult);
       } catch (error) {
-        console.error('Tool error:', error);
-        return createJSONRPCError(
-          request.id || 'unknown',
-          -32601,
-          error instanceof Error ? error.message : 'Something went wrong'
-        );
+console.error('Tool error:', error);
+return createJSONRPCError(
+  request.id || 'unknown',
+  -32601,
+  error instanceof Error ? error.message : 'Something went wrong'
+);
       }
 
     default:

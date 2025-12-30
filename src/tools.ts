@@ -5,7 +5,7 @@
  * Each tool function returns data in MCP format.
  */
 
-export async function getGreeting(_input?: any) {
+export async function getGreeting() {
   // Return static data in MCP format
   return {
     content: [

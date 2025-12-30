@@ -1,0 +1,21 @@
+#!/bin/sh
+
+echo "Running ESLint on staged files..."
+
+FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.ts$')
+
+if [ -z "$FILES" ]; then
+  echo "No JS files staged. Skipping ESLint."
+  exit 0
+fi
+
+./node_modules/.bin/eslint $FILES
+STATUS=$?
+
+if [ $STATUS -ne 0 ]; then
+  echo "❌ ESLint failed. Fix issues before committing."
+  exit 1
+fi
+
+echo "✅ ESLint passed."
+exit 0
