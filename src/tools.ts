@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import { getGreeting } from './functions.ts';
-
-export type ToolHandler = (args: any) => Promise<any>;
-
+type ToolHandler = (args: any) => Promise<any>;
 
 const greetingSchema = z.object({
   username: z.string(),

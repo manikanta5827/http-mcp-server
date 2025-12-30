@@ -37,8 +37,6 @@ export async function handleMCPRequest(
     // Step 3: Client calls a tool
     case 'tools/call':
       const { name, arguments: args } = request.params;
-      console.log('method-name :: ', name);
-      console.log('inputs :: ', args);
 
       const handler = allTools.get(name);
 

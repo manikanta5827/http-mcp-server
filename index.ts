@@ -2,6 +2,7 @@ import { serve } from 'bun';
 import { handleMCPRequest } from './src/handler.ts';
 import { createJSONRPCError } from './src/jsonrpc.ts';
 import type { MCPRequest } from './src/types.ts';
+import { appendFile } from 'node:fs/promises';
 
 const port = parseInt(process.env.PORT ?? '3000', 10);
 
@@ -38,10 +39,21 @@ serve({
       POST: async (req) => {
         try {
           const body = (await req.json()) as MCPRequest;
+
+          // store input
+          await appendFile(
+            'temp.txt',
+            ` \n ----- input ----- \n ${JSON.stringify(body, null, 5)}`
+          );
+
           const response = await handleMCPRequest(body);
 
-          console.log(JSON.stringify(response, null, 2));
-          
+          // store output
+          await appendFile(
+            'temp.txt',
+            ` \n ----- output ----- \n ${JSON.stringify(response, null, 5)}`
+          );
+
           if (response) {
             return new Response(JSON.stringify(response), {
               headers: {
