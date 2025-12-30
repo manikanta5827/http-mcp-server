@@ -1,6 +1,9 @@
-import type { MCPResponse } from './types.js';
+import type { MCPResponse } from './types';
 
-export function createJSONRPCResponse(id: number | string, result: any): MCPResponse {
+export function createJSONRPCResponse(
+  id: number | string,
+  result: any
+): MCPResponse {
   return {
     jsonrpc: '2.0',
     id,
@@ -23,8 +26,4 @@ export function createJSONRPCError(
       ...(data && { data }),
     },
   };
-}
-
-export function createErrorResponse(id: number | string, error: Error): MCPResponse {
-  return createJSONRPCError(id, -32603, error.message);
 }

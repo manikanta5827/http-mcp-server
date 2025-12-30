@@ -7,12 +7,9 @@
  * 3. tools/call - Client calls a tool
  */
 
-import type { MCPRequest, MCPResponse } from './types.js';
-import {
-  createJSONRPCResponse,
-  createJSONRPCError
-} from './jsonrpc.js';
-import { tools, allTools } from './registry.js';
+import type { MCPRequest, MCPResponse } from './types.ts';
+import { createJSONRPCResponse, createJSONRPCError } from './jsonrpc.ts';
+import { tools, allTools } from './tools.ts';
 
 const serverInfo = {
   name: 'simple-mcp-server',
@@ -40,6 +37,9 @@ export async function handleMCPRequest(
     // Step 3: Client calls a tool
     case 'tools/call':
       const { name, arguments: args } = request.params;
+      console.log('method-name :: ', name);
+      console.log('inputs :: ', args);
+
       const handler = allTools.get(name);
 
       if (!handler) {
@@ -69,12 +69,12 @@ export async function handleMCPRequest(
 
         return createJSONRPCResponse(request.id!, formattedResult);
       } catch (error) {
-console.error('Tool error:', error);
-return createJSONRPCError(
-  request.id || 'unknown',
-  -32601,
-  error instanceof Error ? error.message : 'Something went wrong'
-);
+        console.error('Tool error:', error);
+        return createJSONRPCError(
+          request.id || 'unknown',
+          -32601,
+          error instanceof Error ? error.message : 'Something went wrong'
+        );
       }
 
     default:

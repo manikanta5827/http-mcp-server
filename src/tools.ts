@@ -1,26 +1,22 @@
-/**
- * Tool Implementation
- *
- * This is where you write the actual logic for your tools.
- * Each tool function returns data in MCP format.
- */
+import { z } from 'zod';
+import { getGreeting } from './functions.ts';
 
-export async function getGreeting() {
-  // Return static data in MCP format
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(
-          {
-            message: 'Hello from MCP Server!',
-            timestamp: new Date().toISOString(),
-            server: 'Bun MCP Server',
-          },
-          null,
-          2
-        ),
-      },
-    ],
-  };
-}
+export type ToolHandler = (args: any) => Promise<any>;
+
+
+const greetingSchema = z.object({
+  username: z.string(),
+});
+
+export const tools = [
+  {
+    name: 'greeting.hello',
+    title: 'Get a greeting',
+    description: 'Returns a simple greeting message.',
+    inputSchema: z.toJSONSchema(greetingSchema, { io: 'input' }),
+  },
+];
+
+export const allTools = new Map<string, ToolHandler>([
+  ['greeting.hello', getGreeting],
+]);

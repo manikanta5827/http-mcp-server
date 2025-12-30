@@ -1,7 +1,7 @@
 import { serve } from 'bun';
-import { handleMCPRequest } from './src/mcp.js';
-import { createJSONRPCError } from './src/jsonrpc.js';
-import type { MCPRequest } from './src/types.js';
+import { handleMCPRequest } from './src/handler.ts';
+import { createJSONRPCError } from './src/jsonrpc.ts';
+import type { MCPRequest } from './src/types.ts';
 
 const port = parseInt(process.env.PORT ?? '3000', 10);
 
@@ -40,6 +40,8 @@ serve({
           const body = (await req.json()) as MCPRequest;
           const response = await handleMCPRequest(body);
 
+          console.log(JSON.stringify(response, null, 2));
+          
           if (response) {
             return new Response(JSON.stringify(response), {
               headers: {
@@ -56,7 +58,6 @@ serve({
         } catch (error) {
           console.error('Request processing error:', error);
 
-          // Use the imported helper instead of the local one
           const errorResponse = createJSONRPCError(
             'unknown',
             -32700,
