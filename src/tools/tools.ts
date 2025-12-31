@@ -8,7 +8,7 @@ const greetingSchema = z.object({
 
 export const tools = [
   {
-    name: 'greeting.hello',
+    name: 'greeting_hello',
     title: 'Get a greeting',
     description: 'Returns a simple greeting message.',
     inputSchema: z.toJSONSchema(greetingSchema, { io: 'input' }),
@@ -16,5 +16,5 @@ export const tools = [
 ];
 
 export const allTools = new Map<string, ToolHandler>([
-  ['greeting.hello', getGreeting],
+  ['greeting_hello', getGreeting],
 ]);

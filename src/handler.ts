@@ -9,7 +9,7 @@
 
 import type { MCPRequest, MCPResponse } from './types.ts';
 import { createJSONRPCResponse, createJSONRPCError } from './jsonrpc.ts';
-import { tools, allTools } from './tools.ts';
+import { tools, allTools } from './tools/tools.ts';
 
 const serverInfo = {
   name: 'simple-mcp-server',
@@ -23,7 +23,7 @@ export async function handleMCPRequest(
     // Step 1: Client initializes connection
     case 'initialize':
       return createJSONRPCResponse(request.id!, {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: {
           tools: { listChanged: true },
         },
@@ -53,17 +53,14 @@ export async function handleMCPRequest(
         const result = await handler(args || {});
 
         // Format result in MCP content format if needed
-        const formattedResult =
-          typeof result === 'object' && result !== null && 'content' in result
-            ? result
-            : {
-                content: [
-                  {
-                    type: 'text',
-                    text: JSON.stringify(result, null, 2),
-                  },
-                ],
-              };
+        const formattedResult = {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
 
         return createJSONRPCResponse(request.id!, formattedResult);
       } catch (error) {

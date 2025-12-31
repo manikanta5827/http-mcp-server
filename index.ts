@@ -8,7 +8,6 @@ const port = parseInt(process.env.PORT ?? '3000', 10);
 
 serve({
   port,
-
   routes: {
     // CORS preflight for any path
     '/*': {
@@ -95,4 +94,4 @@ serve({
   },
 });
 
-console.log(`Simple MCP Server listening on port ${port}`);
+console.error(`Simple MCP Server listening on port ${port}`);
