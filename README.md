@@ -1,225 +1,147 @@
-# Simple MCP Server
+# Simple MCP Server (HTTP & Stdio)
 
-A minimal HTTP MCP Server example built with [Bun](https://bun.com/) to help you understand how MCP (Model Context Protocol) HTTP servers work.
+A lightweight Model Context Protocol (MCP) server implementation built from scratch using [Bun](https://bun.com/). This project demonstrates how to build an MCP server without relying on heavy external SDKs, focusing on understanding the core protocol flow.
 
-This is a learning example with:
+It supports both **HTTP** (SSE-like behavior via POST) and **Stdio** (Standard Input/Output) transports, making it versatile for testing with tools like `curl` or integrating with AI clients like Claude Desktop.
 
-- **Simple structure** - Just 3 files
-- **One tool** - Returns a static greeting message
-- **No external APIs** - Pure MCP protocol demonstration
-- **Easy to understand** - Clean, commented code
+## 🌟 Key Features
 
-> **💡 Don't have Bun?** Install it from [https://bun.com/](https://bun.com/)
+- **From Scratch:** Built without the official MCP SDK to demonstrate how the protocol actually works under the hood.
+- **Dual Transport:**
+  - **HTTP:** Simple `POST` endpoint for easy testing.
+  - **Stdio:** Standard input/output for integration with MCP clients (e.g., Claude Desktop, IDE extensions).
+- **Fast:** Powered by Bun's native high-performance HTTP server.
+- **Simple:** Minimal dependencies, clean architecture.
 
 ## 📁 Project Structure
 
 ```
-src/
-├── server.ts    # HTTP server entry point (Bun serve)
-├── mcp.ts       # MCP protocol request handler
-├── types.ts     # TypeScript type definitions for MCP protocol
-├── jsonrpc.ts   # JSON-RPC helper functions (response, error creation)
-├── registry.ts  # Tool registry (defines available tools and their handlers)
-├── utils.ts     # Utility functions (e.g., Zod schema conversion)
-└── tools.ts     # Tool implementations (e.g., getGreeting function)
+.
+├── index.ts           # HTTP Server entry point (Bun.serve)
+├── index-stdio.ts     # Stdio Server entry point (Stdin/Stdout)
+├── src/
+│   ├── handler.ts     # Core Protocol Logic (Router)
+│   ├── jsonrpc.ts     # JSON-RPC 2.0 Utilities
+│   ├── types.ts       # TypeScript Interfaces
+│   └── tools/
+│       ├── functions.ts   # Actual Business Logic
+│       └── tools.ts       # Tool Definitions & Registry
 ```
 
 ## 🚀 Quick Start
 
-1. **Install dependencies:**
+### 1. Prerequisites
 
-   ```bash
-   bun install
-   ```
+Ensure you have [Bun](https://bun.com/) installed.
 
-2. **Start the server:**
+```bash
+bun install
+```
 
-   ```bash
-   bun run src/server.ts
-   ```
+### 2. Running in HTTP Mode
 
-   Server starts on port 3000 (or set `PORT` environment variable).
+This starts a web server listening on port 3000.
 
-3. **Test it:**
+```bash
+bun run index.ts
+```
 
-   ```bash
-   # Initialize connection
-   curl -X POST http://localhost:3000/mcp \
-     -H "Content-Type: application/json" \
-     -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
+**Test with curl:**
 
-   # List available tools
-   curl -X POST http://localhost:3000/mcp \
-     -H "Content-Type: application/json" \
-     -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+```bash
+# List tools
+curl -X POST http://localhost:3000/mcp \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 
-   # Call the greeting tool
-   curl -X POST http://localhost:3000/mcp \
-     -H "Content-Type: application/json" \
-     -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"greeting.hello","arguments":{}}}'
-   ```
+# Call the greeting tool
+curl -X POST http://localhost:3000/mcp \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"greeting_hello","arguments":{"username":"World"}}}'
+```
+
+### 3. Running in Stdio Mode
+
+This mode listens to standard input and writes to standard output, suitable for piping or AI agent integration.
+
+```bash
+bun run index-stdio.ts
+```
+
+**Test manually:**
+Type this JSON and press Enter:
+
+```json
+{ "jsonrpc": "2.0", "id": 1, "method": "tools/list" }
+```
+
+## 🧠 How It Works
+
+The server follows a simple unidirectional flow:
+
+1.  **Transport Layer (`index.ts` / `index-stdio.ts`):** Receives the raw message (HTTP body or Stdin line).
+2.  **JSON Parsing:** Converts the string into a JSON object.
+3.  **Protocol Handler (`src/handler.ts`):** Identifies the MCP method (e.g., `initialize`, `tools/call`).
+4.  **Tool Registry (`src/tools/tools.ts`):** If a tool call is requested, looks up the corresponding function.
+5.  **Execution (`src/tools/functions.ts`):** Runs the actual business logic.
+6.  **Response (`src/jsonrpc.ts`):** Formats the result into a standardized JSON-RPC 2.0 response.
+
+## 📚 File Breakdown
+
+### Entry Points
+
+- **`index.ts`**: Sets up a Bun HTTP server. It handles CORS, a health check (`/healthz`), and the main `/mcp` endpoint. It logs input/output to `temp.txt` for debugging.
+- **`index-stdio.ts`**: Sets up a readline interface to listen to `stdin`. It's essential for local integrations where the client spawns the server process directly.
+
+### Source (`src/`)
+
+- **`src/handler.ts`**: The brain of the operation. It exports `handleMCPRequest` which switches on the request method:
+  - `initialize`: Handshakes with the client.
+  - `tools/list`: Returns the available tool definitions.
+  - `tools/call`: Executes a specific tool.
+- **`src/tools/tools.ts`**: The registry. It maps tool names (strings) to their executable functions and defines the Zod schemas for validation.
+- **`src/tools/functions.ts`**: Pure functions containing the logic. For example, `getGreeting` simply returns a formatted string object.
+- **`src/jsonrpc.ts`**: Helper factories to ensure all responses strictly follow the JSON-RPC 2.0 format (`{ jsonrpc: "2.0", result: ... }` or error objects).
+- **`src/types.ts`**: TypeScript definitions for the requests and responses, ensuring type safety across the application.
 
 ## 🛠️ Available Tools
 
-| Tool             | Title          | Description                        | Input Schema                      |
-| ---------------- | -------------- | ---------------------------------- | --------------------------------- |
-| `greeting.hello` | Get a greeting | Returns a simple greeting message. | Empty object `{}` (no parameters) |
+| Tool Name        | Description                 | Arguments           |
+| ---------------- | --------------------------- | ------------------- |
+| `greeting_hello` | Returns a greeting message. | `username` (string) |
 
-### Tool Response Format
+### 1. Integrating with AI Clients (Claude Desktop, IDEs)
 
-When you call `greeting.hello`, it returns a JSON-RPC response with this structure:
+Most MCP-compliant clients (like Claude Desktop) communicate via **Stdio**.
+
+**Configuration for a Local Stdio Server (Claude Desktop):**
+Add this to your `claude_desktop_config.json`:
 
 ```json
 {
-  "jsonrpc": "2.0",
-  "id": 3,
-  "result": {
-    "content": [
-      {
-        "type": "text",
-        "text": "{\n  \"message\": \"Hello from MCP Server!\",\n  \"timestamp\": \"2024-01-01T12:00:00.000Z\",\n  \"server\": \"Bun MCP Server\"\n}"
-      }
-    ]
+  "mcpServers": {
+    "my-bun-server": {
+      "command": "bun",
+      "args": ["run", "/ABSOLUTE/PATH/TO/PROJECT/index-stdio.ts"]
+    }
   }
 }
 ```
 
-The actual data inside the `text` field:
+_Note: Replace `/ABSOLUTE/PATH/TO/PROJECT` with your actual project path._
+
+**Configuration for a Remote HTTP MCP Server (Claude Desktop via `mcp-remote`):**
+If you have deployed your MCP server to a remote HTTP endpoint (e.g., a serverless function), you can use `mcp-remote` to bridge it to Claude Desktop.
+
+Add this to your `claude_desktop_config.json`:
 
 ```json
 {
-  "message": "Hello from MCP Server!",
-  "timestamp": "2024-01-01T12:00:00.000Z",
-  "server": "Bun MCP Server"
+  "mcpServers": {
+    "serverless_lambda_mcp_server": {
+      "command": "npx",
+      "args": ["mcp-remote", "http://localhost:3200/mcp"]
+    }
+  }
 }
 ```
 
-## 📝 How It Works
-
-### File Breakdown
-
-1. **`server.ts`** - HTTP server entry point
-   - Starts Bun HTTP server on port 3000 (configurable via `PORT` env var)
-   - Handles CORS preflight (OPTIONS requests)
-   - Health check endpoint (`/healthz`)
-   - Routes POST requests to `/mcp` to the MCP handler (`mcp.ts`)
-   - Parses JSON-RPC requests and returns JSON-RPC responses, utilizing `jsonrpc.ts` for error responses.
-
-2. **`mcp.ts`** - MCP protocol request handler
-   - Implements `handleMCPRequest()` function.
-   - Handles 3 MCP methods by delegating to the tool registry and using JSON-RPC helpers:
-     - `initialize` - Returns server info and capabilities
-     - `tools/list` - Returns list of available tools
-     - `tools/call` - Executes a tool and returns result
-   - Error handling (converts errors to JSON-RPC error responses via `jsonrpc.ts`).
-
-3. **`types.ts`** - TypeScript type definitions
-   - Defines core interfaces like `MCPRequest` and `MCPResponse`.
-
-4. **`jsonrpc.ts`** - JSON-RPC helper functions
-   - Provides functions to create standard JSON-RPC responses and error messages.
-
-5. **`registry.ts`** - Tool registry
-   - Defines the list of available tools (`tools` array) and their corresponding handlers (`allTools` map).
-   - Handles Zod schema conversion for tool input definitions using `utils.ts`.
-
-6. **`utils.ts`** - Utility functions
-   - Contains helper functions such as `zodToMCPSchema` for converting Zod schemas to MCP-compatible JSON schemas.
-
-7. **`tools.ts`** - Tool implementation
-   - `getGreeting()` function - Returns static greeting data
-   - Returns data in MCP content format: `{ content: [{ type: 'text', text: '...' }] }`
-
-
-## 🔍 MCP Protocol Flow
-
-1. **Initialize** - Client sends `initialize` request
-
-   - Server responds with:
-     - Protocol version: `2024-11-05`
-     - Server info: `{ name: 'simple-mcp-server', version: '1.0.0' }`
-     - Capabilities: `{ tools: { listChanged: true } }`
-
-2. **List Tools** - Client sends `tools/list` request
-
-   - Server responds with array of available tools and their schemas
-
-3. **Call Tool** - Client sends `tools/call` request with tool name and arguments
-   - Server executes the tool handler
-   - Returns result in MCP content format
-   - On error, returns JSON-RPC error response
-
-## 🌐 Endpoints
-
-| Route      | Method  | Purpose               | Response              |
-| ---------- | ------- | --------------------- | --------------------- |
-| `/mcp`     | POST    | MCP protocol endpoint | JSON-RPC response     |
-| `/healthz` | GET     | Health check          | `200 OK` (plain text) |
-| `/mcp`     | OPTIONS | CORS preflight        | `204 No Content`      |
-
-All responses include `Access-Control-Allow-Origin: *` headers for browser compatibility.
-
-## ⚙️ Configuration
-
-| Variable | Default | Description      |
-| -------- | ------- | ---------------- |
-| `PORT`   | `3000`  | HTTP server port |
-
-## 📦 Dependencies
-
-- **Bun** - Runtime and HTTP server (`serve()` function)
-- **Zod** - Schema validation for tool inputs (`z.object()`, `z.toJSONSchema()`)
-- **@types/node** - TypeScript types for Node.js
-- **@types/bun** - TypeScript types for Bun
-- **TypeScript** - Type checking (peer dependency)
-
-## 🎯 Learning Resources
-
-This is a minimal example to understand MCP HTTP servers. To learn more:
-
-- [MCP Specification](https://modelcontextprotocol.io/)
-- [Bun Documentation](https://bun.com/docs)
-- [Zod Documentation](https://zod.dev/)
-
-## 🔧 Adding Your Own Tools
-
-1. **Add tool function to `tools.ts`:**
-
-   ```typescript
-   export async function myTool(input?: any) {
-     return {
-       content: [
-         {
-           type: 'text',
-           text: JSON.stringify({ result: 'your data' }, null, 2),
-         },
-       ],
-     };
-   }
-   ```
-
-2. **Register tool in `registry.ts`:**
-
-   - Import your function: `import { myTool } from './tools.js';`
-   - Add to the `tools` array with name, title, description, and inputSchema.
-   - Add to the `allTools` Map: `['my.tool', myTool]`.
-
-3. **Define input schema** (if your tool needs parameters):
-   ```typescript
-   const myToolSchema = z.object({
-     param1: z.string(),
-     param2: z.number().optional(),
-   });
-   ```
-
-That's it! This simple structure makes it easy to understand and extend.
-
-## 🐛 Error Handling
-
-The server handles errors gracefully:
-
-- **Parse errors** (`-32700`): Invalid JSON in request
-- **Method not found** (`-32601`): Unknown MCP method or tool name
-- **Internal error** (`-32603`): Tool execution errors
-
-All errors are returned in JSON-RPC error format with appropriate error codes.
+_Make sure `mcp-remote` is installed globally or accessible in your PATH._
