@@ -1,20 +1,20 @@
 import { z } from 'zod';
-import { getGreeting } from './functions.ts';
+import { changeFanSpeed } from './functions.ts';
 type ToolHandler = (args: any) => Promise<any>;
 
-const greetingSchema = z.object({
-  username: z.string(),
+const getChangeFanSpeedSchema = z.object({
+  speed: z.number(),
 });
 
 export const tools = [
   {
-    name: 'greeting_hello',
-    title: 'Get a greeting',
-    description: 'Returns a simple greeting message.',
-    inputSchema: z.toJSONSchema(greetingSchema, { io: 'input' }),
+    name: 'change_fan_speed',
+    title: 'change speed of fan',
+    description: 'change speed of fan Allowed values: 1,2,3,4,5',
+    inputSchema: z.toJSONSchema(getChangeFanSpeedSchema, { io: 'input' }),
   },
 ];
 
 export const allTools = new Map<string, ToolHandler>([
-  ['greeting_hello', getGreeting],
+  ['change_fan_speed', changeFanSpeed],
 ]);

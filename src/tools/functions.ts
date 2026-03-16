@@ -5,11 +5,11 @@
  * Each tool function returns data in MCP format.
  */
 
-export async function getGreeting({ username }: { username: string }) {
+export async function changeFanSpeed({
+  speed,
+}: {
+  speed: number;
+}): Promise<string> {
   // Return static data in MCP format
-  return {
-    message: `Hello ${username} from MCP Server!`,
-    timestamp: new Date().toISOString(),
-    server: 'Bun MCP Server',
-  };
+  return `Fan speed is changed to ${speed}..`;
 }

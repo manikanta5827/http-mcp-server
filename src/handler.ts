@@ -25,7 +25,7 @@ export async function handleMCPRequest(
       return createJSONRPCResponse(request.id!, {
         protocolVersion: '2025-06-18',
         capabilities: {
-          tools: { listChanged: true },
+          tools: { listChanged: false },
         },
         serverInfo,
       });
@@ -71,6 +71,8 @@ export async function handleMCPRequest(
           error instanceof Error ? error.message : 'Something went wrong'
         );
       }
+    case 'notifications/initialized':
+      return null;
 
     default:
       return createJSONRPCError(
